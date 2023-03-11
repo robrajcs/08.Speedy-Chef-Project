@@ -107,6 +107,7 @@ function createListOfPizzas(pizzas) {
     pizzaNameEl = buildElement("span", pizza.name);
     // create list item to show the quantity and pizza name
     const pizzaItem = document.createElement("li");
+    pizzaNameEl.classList.add("pizza_name");
     pizzaItem.append(orderQuantityEl, pizzaNameEl);
     pizzaList.appendChild(pizzaItem);
   });
@@ -116,7 +117,8 @@ function createListOfPizzas(pizzas) {
 function createSingleOrder(order) {
   // wrapper
   const orderWrapper = document.createElement("div");
-  orderWrapper.className = "oerder_wrapper";
+  orderWrapper.className = "order_wrapper";
+  orderWrapper.addEventListener("click", selectCurrentOrder);
   // order number
   const orderNumberEl = buildElement("h4", `Order: ${order.id}`);
   orderWrapper.appendChild(orderNumberEl);
@@ -133,6 +135,24 @@ function createOrdersList() {
   });
 }
 
+function selectCurrentOrder(e) {
+  const pizzas = document.querySelectorAll(".pizza_name");
+  pizzas.forEach(function (pizza) {
+    pizza.addEventListener("click", setCurrentPizza);
+  });
+
+  if (document.querySelector("#working_on").children.length > 1) return;
+  let element = e.target;
+  const orderWrapper = element.closest(".order_wrapper");
+  if (orderWrapper !== null) {
+    orderWrapper.removeEventListener("click", selectCurrentOrder);
+    // orderWrapper.addEventListener("click", selectCurrentOrder);
+    const orderDiv = document.querySelector("#working_on");
+    orderDiv.appendChild(orderWrapper);
+  }
+  console.log(orderWrapper);
+}
+
 createOrdersList();
 
 function buildElement(elementName, elementContent) {
@@ -140,4 +160,9 @@ function buildElement(elementName, elementContent) {
   const content = document.createTextNode(elementContent);
   element.appendChild(content);
   return element;
+}
+
+function setCurrentPizza(e) {
+  const pizzaName = e.target.innerText;
+  document.querySelector("#current_pizza").innerText = pizzaName;
 }
