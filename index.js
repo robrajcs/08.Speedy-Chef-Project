@@ -99,6 +99,11 @@ const ingredients = [
   "CHICKEN",
 ];
 
+let oven = [];
+const ovenCapacity = 6;
+let pizzasCompletedForOrder = 0;
+let gameStarted = false;
+
 function createListOfPizzas(pizzas) {
   const pizzaList = document.createElement("ul");
   pizzas.forEach(function (pizza) {
@@ -153,8 +158,6 @@ function selectCurrentOrder(e) {
   console.log(orderWrapper);
 }
 
-createOrdersList();
-
 function buildElement(elementName, elementContent) {
   const element = document.createElement(elementName);
   const content = document.createTextNode(elementContent);
@@ -165,4 +168,80 @@ function buildElement(elementName, elementContent) {
 function setCurrentPizza(e) {
   const pizzaName = e.target.innerText;
   document.querySelector("#current_pizza").innerText = pizzaName;
+  displayMethod(pizzaName);
 }
+
+function displayMethod(pizzaName) {
+  document.querySelector("#pizza_name").innerHTML = pizzaName;
+  const selectedPizza = pizzas.find((pizza) => pizza.name === pizzaName);
+  const methodSteps = selectedPizza.method.split(".");
+  document.querySelector("#pizza_method").innerHTML = "";
+  methodSteps.forEach(function (method) {
+    const steps = buildElement("p", method);
+    document.querySelector("#pizza_method").appendChild(steps);
+  });
+}
+
+function displaOvenItems() {
+  document.querySelector("#oven").innerHTML = "";
+  oven.forEach(function (pizza) {
+    const pizzaDiv = document.createElement("div");
+    pizzaDiv.className = "pizza_div";
+    const image = document.createElement("img");
+    image.src = "pizza.svg";
+    const pizzaName = buildElement("p", `${pizza.name}`);
+    pizzaDiv.append(image, pizzaName);
+    document.querySelector("#oven").appendChild(pizzaDiv);
+  });
+}
+
+function addToOven() {
+  pizzasCompletedForOrder++;
+  const pizzaName = document.querySelector("#current_pizza").innerText;
+  if (pizzaName) {
+    const pizzaForOven = {
+      name: pizzaName,
+      timeAdded: "5/5/28",
+    };
+    oven.push(pizzaForOven);
+    displaOvenItems();
+  }
+}
+
+function startOfGame() {
+  if (gameStarted) return;
+  document.querySelector("#startBtn").style.display = "none";
+  document.querySelector("#endBtn").style.display = "inline";
+  gameStarted = true;
+  const orders = document.getElementsByClassName("order_wrapper");
+  Array.from(orders).forEach(function (order) {
+    order.remove();
+  });
+  createOrdersList();
+}
+
+function endOfGame() {
+  gameStarted = false;
+  document.querySelector("#startBtn").style.display = "inline";
+  document.querySelector("#endBtn").style.display = "none";
+}
+
+document.querySelector("#addToOven").addEventListener("click", addToOven);
+document.querySelector("#startBtn").addEventListener("click", startOfGame);
+document.querySelector("#endBtn").addEventListener("click", endOfGame);
+
+function generateNewOrder() {
+  let pizzas = [];
+}
+function genereateNewPizza() {
+  const quantity = Math.ceil(Math.random() * 3);
+  const randomPizza = pizzas[Math.floor(Math.random() * pizzas.length)];
+  const pizza = {
+    quantity,
+    name: randomPizza.name,
+  };
+  return pizza;
+}
+
+generateNewOrder();
+genereateNewPizza();
