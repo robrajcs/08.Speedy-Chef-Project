@@ -227,11 +227,20 @@ function startOfGame() {
   createOrdersList();
   ordersTimer();
   countdownTimer();
-  setInterval(countdownTimer, 1000);
+  gameTimer();
+  countdownTimerRef = setInterval(countdownTimer, 1000);
+  document.querySelector("#message").innerText =
+    "Chef, our first orders are coming in!";
+  setTimeout(function () {
+    document.querySelector("#message").innerText = "";
+  }, 3000);
 }
 
 function endOfGame() {
   gameStarted = false;
+  clearInterval(orderTimerRef);
+  clearInterval(countdownTimerRef);
+  clearTimeout(gameTimerRef);
   document.querySelector("#startBtn").style.display = "inline";
   document.querySelector("#endBtn").style.display = "none";
 }
@@ -269,13 +278,20 @@ function genereateNewPizza() {
 // generateNewOrder();
 // genereateNewPizza();
 
+let orderTimerRef = "";
 function ordersTimer() {
-  setInterval(generateNewOrder, 3000);
+  orderTimerRef = setInterval(generateNewOrder, 3000);
 }
 
+let countdownTimerRef = "";
 function countdownTimer() {
   countdownTime -= 1;
   document.querySelector(
     "#gameLength"
   ).innerText = `Time left: ${countdownTime}`;
+}
+
+let gameTimerRef = "";
+function gameTimer() {
+  gameTimerRef = setTimeout(endOfGame, gameLength * 1000);
 }
