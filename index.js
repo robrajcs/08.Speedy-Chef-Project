@@ -103,6 +103,12 @@ let oven = [];
 const ovenCapacity = 6;
 let pizzasCompletedForOrder = 0;
 let gameStarted = false;
+const gameLength = 300;
+let countdownTime = gameLength;
+
+document.querySelector(
+  "#gameLength"
+).innerText = `Game length is ${gameLength}`;
 
 function createListOfPizzas(pizzas) {
   const pizzaList = document.createElement("ul");
@@ -134,6 +140,7 @@ function createSingleOrder(order) {
 }
 
 function createOrdersList() {
+  document.querySelector("#orders").innerHTML = "";
   orders.forEach(function (order) {
     const singleOrder = createSingleOrder(order);
     document.querySelector("#orders").appendChild(singleOrder);
@@ -218,6 +225,9 @@ function startOfGame() {
     order.remove();
   });
   createOrdersList();
+  ordersTimer();
+  countdownTimer();
+  setInterval(countdownTimer, 1000);
 }
 
 function endOfGame() {
@@ -230,9 +240,22 @@ document.querySelector("#addToOven").addEventListener("click", addToOven);
 document.querySelector("#startBtn").addEventListener("click", startOfGame);
 document.querySelector("#endBtn").addEventListener("click", endOfGame);
 
+let orderNumber = orders.length + 1;
 function generateNewOrder() {
   let pizzas = [];
+  const orderItem = Math.ceil(Math.random() * 5);
+  for (i = 1; i <= orderItem; i++) {
+    pizzas.push(genereateNewPizza());
+  }
+  const newOrder = {
+    id: orderNumber,
+    pizzas,
+  };
+  orders.push(newOrder);
+  orderNumber++;
+  createOrdersList();
 }
+
 function genereateNewPizza() {
   const quantity = Math.ceil(Math.random() * 3);
   const randomPizza = pizzas[Math.floor(Math.random() * pizzas.length)];
@@ -243,5 +266,16 @@ function genereateNewPizza() {
   return pizza;
 }
 
-generateNewOrder();
-genereateNewPizza();
+// generateNewOrder();
+// genereateNewPizza();
+
+function ordersTimer() {
+  setInterval(generateNewOrder, 3000);
+}
+
+function countdownTimer() {
+  countdownTime -= 1;
+  document.querySelector(
+    "#gameLength"
+  ).innerText = `Time left: ${countdownTime}`;
+}
