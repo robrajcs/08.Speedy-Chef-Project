@@ -105,6 +105,8 @@ let pizzasCompletedForOrder = 0;
 let gameStarted = false;
 const gameLength = 300;
 let countdownTime = gameLength;
+const cookingTime = 20;
+let completedPizzas = 0;
 
 document.querySelector(
   "#gameLength"
@@ -208,7 +210,7 @@ function addToOven() {
   if (pizzaName) {
     const pizzaForOven = {
       name: pizzaName,
-      timeAdded: "5/5/28",
+      timeAdded: Date.now(),
     };
     oven.push(pizzaForOven);
     displaOvenItems();
@@ -234,6 +236,7 @@ function startOfGame() {
   setTimeout(function () {
     document.querySelector("#message").innerText = "";
   }, 3000);
+  checkOven();
 }
 
 function endOfGame() {
@@ -295,3 +298,20 @@ let gameTimerRef = "";
 function gameTimer() {
   gameTimerRef = setTimeout(endOfGame, gameLength * 1000);
 }
+
+function checkOven() {
+  setInterval(function () {
+    oven.forEach(function (pizza) {
+      if (Date.now() - cookingTime * 1000 > pizza.timeAdded) {
+        oven.shift();
+        displaOvenItems();
+        completedPizzas++;
+      }
+    });
+  }, 1000);
+}
+
+const canvas = document.querySelector("#pizza_area");
+const ctx = canvas.getContext("2d");
+
+ctx.strokeRect(0, 0, canvas.width, canvas.height);
