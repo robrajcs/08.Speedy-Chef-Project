@@ -109,12 +109,15 @@ const cookingTime = 20;
 let completedPizzas = 0;
 let completedSteps = [];
 let wastedPizzas = 0;
+let completedOrders = 0;
 
 document.querySelector(
   "#gameLength"
 ).innerText = `Game length is ${gameLength}`;
 
+let totalPizzas = 0;
 function createListOfPizzas(pizzas) {
+  totalPizzas = 0;
   const pizzaList = document.createElement("ul");
   pizzas.forEach(function (pizza) {
     orderQuantityEl = buildElement("span", `${pizza.quantity} - `);
@@ -122,6 +125,7 @@ function createListOfPizzas(pizzas) {
     pizzaNameEl = buildElement("span", pizza.name);
     // create list item to show the quantity and pizza name
     const pizzaItem = document.createElement("li");
+    totalPizzas += pizza.quantity;
     pizzaNameEl.classList.add("pizza_name");
     pizzaItem.append(orderQuantityEl, pizzaNameEl);
     pizzaList.appendChild(pizzaItem);
@@ -139,6 +143,8 @@ function createSingleOrder(order) {
   orderWrapper.appendChild(orderNumberEl);
   // create pizza ul for each order
   const pizzaList = createListOfPizzas(order.pizzas);
+  orderWrapper.setAttribute("data-total-pizzas", totalPizzas);
+  orderWrapper.setAttribute("data-order-number", oreder.id);
   orderWrapper.appendChild(pizzaList);
   return orderWrapper;
 }
@@ -165,8 +171,27 @@ function selectCurrentOrder(e) {
     // orderWrapper.addEventListener("click", selectCurrentOrder);
     const orderDiv = document.querySelector("#working_on");
     orderDiv.appendChild(orderWrapper);
+    const completeButton = buildElement("button", "Complete");
+    completeButton.className = "complete_btn";
+    completeButton.addEventListener("click", completeOrder);
+    orderDiv.appendChild(completeButton);
+    const orderNumber = orderWrapper.getAttribute("data-order-number");
+    orders = orders.filter((order) => order.id != orderNumber);
   }
-  console.log(orderWrapper);
+}
+
+function completeOrder(e) {
+  const currentOrder = document.querySelector("#working_on > .order_wrapper");
+  const totalPizzasOnOrder = currentOrder.getAttribute("data-total-pizzas");
+  if (pizzasCompletedForOrder < totalPizzasOnOrder) {
+    showErrorMessage("You have not made enoug pizzas to complete this order");
+    return;
+  }
+  currentOrder.remove();
+  let completeButton = e.target;
+  completeButton.remove();
+  completedOrders++;
+  pizzasCompletedForOrder = 0;
 }
 
 function buildElement(elementName, elementContent) {
@@ -259,8 +284,9 @@ function showErrorMessage(message) {
 
 function startOfGame() {
   if (gameStarted) return;
-  document.querySelector("#startBtn").style.display = "none";
-  document.querySelector("#endBtn").style.display = "inline";
+  startOfGameUI();
+  // document.querySelector("#startBtn").style.display = "none";
+  // document.querySelector("#endBtn").style.display = "inline";
   gameStarted = true;
   const orders = document.getElementsByClassName("order_wrapper");
   Array.from(orders).forEach(function (order) {
@@ -271,22 +297,44 @@ function startOfGame() {
   countdownTimer();
   gameTimer();
   countdownTimerRef = setInterval(countdownTimer, 1000);
+  checkOven();
+  listIngredients();
+}
+
+function startOfGameUI() {
+  document.querySelector("#startBtn").style.display = "none";
+  document.querySelector("#endBtn").style.display = "inline";
   document.querySelector("#message").innerText =
     "Chef, our first orders are coming in!";
   setTimeout(function () {
     document.querySelector("#message").innerText = "";
   }, 3000);
-  checkOven();
-  listIngredients();
+  document.querySelector("#method").style.display = "block";
+  document.querySelector("#stats").style.display = "none";
+  completedOrders = 0;
+  completedPizzas = 0;
+  wastedPizzas = 0;
+  document.querySelector("#ingredients").innerHTML = "";
+  countdownTime = gameLength;
 }
 
 function endOfGame() {
+  endOfGameUI();
   gameStarted = false;
   clearInterval(orderTimerRef);
   clearInterval(countdownTimerRef);
   clearTimeout(gameTimerRef);
+}
+
+function endOfGameUI() {
   document.querySelector("#startBtn").style.display = "inline";
   document.querySelector("#endBtn").style.display = "none";
+  document.querySelector("#method").style.display = "none";
+  document.querySelector("#stats").style.display = "block";
+  document.querySelector("#completedOrders").innerText = completedOrders;
+  document.querySelector("#completedPizzas").innerText = completedPizzas;
+  document.querySelector("#wastedPizzas").innerText = wastedPizzas;
+  document.querySelector("#stats").className = "fade-in";
 }
 
 document.querySelector("#addToOven").addEventListener("click", addToOven);
@@ -365,6 +413,10 @@ function listIngredients() {
 }
 
 function stepComplete(e) {
+  if (document.querySelector("#current_pizza").innerText === "") {
+    showErrorMessage("first, select a pizza you would like to work on");
+    return;
+  }
   e.target.setAttribute("disabled", true);
   const stepName = e.target.innerText;
   completedSteps.push(stepName);
