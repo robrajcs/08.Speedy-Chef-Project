@@ -107,6 +107,8 @@ const gameLength = 300;
 let countdownTime = gameLength;
 const cookingTime = 20;
 let completedPizzas = 0;
+let completedSteps = [];
+let wastedPizzas = 0;
 
 document.querySelector(
   "#gameLength"
@@ -208,13 +210,51 @@ function addToOven() {
   pizzasCompletedForOrder++;
   const pizzaName = document.querySelector("#current_pizza").innerText;
   if (pizzaName) {
-    const pizzaForOven = {
-      name: pizzaName,
-      timeAdded: Date.now(),
-    };
-    oven.push(pizzaForOven);
-    displaOvenItems();
+    const canAddToOven = stepsCompleted(pizzaName);
+    if (canAddToOven) {
+      const pizzaForOven = {
+        name: pizzaName,
+        timeAdded: Date.now(),
+      };
+      oven.push(pizzaForOven);
+      displaOvenItems();
+      clearCanvas();
+      completedSteps = [];
+    }
   }
+}
+
+function stepsCompleted(pizzaName) {
+  const pizzaObject = pizzas.find(function (pizza) {
+    return pizza.name === pizzaName;
+  });
+  const stepsRequired = pizzaObject.requiredSteps;
+  const checkSteps = stepsRequired.every(function (element, index) {
+    return element === completedSteps[index];
+  });
+  if (completedSteps.length > stepsRequired.length) {
+    showErrorMessage("You have used too many ingredients");
+    wastedPizza();
+    return;
+  }
+  if (completedSteps.length < stepsRequired.length) {
+    showErrorMessage("You have not used enough ingredients");
+    return;
+  }
+  if (completedSteps.length === stepsRequired.length && !checkSteps) {
+    showErrorMessage("You have used the wrong ingredients");
+    wastedPizza();
+    return;
+  }
+  if (oven.length < ovenCapacity) return true;
+  return false;
+}
+
+function showErrorMessage(message) {
+  document.querySelector("#message").innerText = message;
+  setTimeout(function () {
+    document.querySelector("#message").innerText = "";
+  }, 2000);
 }
 
 function startOfGame() {
@@ -237,6 +277,7 @@ function startOfGame() {
     document.querySelector("#message").innerText = "";
   }, 3000);
   checkOven();
+  listIngredients();
 }
 
 function endOfGame() {
@@ -314,4 +355,124 @@ function checkOven() {
 const canvas = document.querySelector("#pizza_area");
 const ctx = canvas.getContext("2d");
 
-ctx.strokeRect(0, 0, canvas.width, canvas.height);
+function listIngredients() {
+  ingredients.forEach(function (ingredient) {
+    const ingredientElement = buildElement("button", ingredient);
+    ingredientElement.className = "ingredient";
+    ingredientElement.addEventListener("click", stepComplete);
+    document.querySelector("#ingredients").appendChild(ingredientElement);
+  });
+}
+
+function stepComplete(e) {
+  e.target.setAttribute("disabled", true);
+  const stepName = e.target.innerText;
+  completedSteps.push(stepName);
+  makePizza(stepName);
+}
+
+function makePizza(ingredient) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  switch (ingredient) {
+    case "ROLL DOUGH":
+      ctx.arc(canvas.width / 2, canvas.height / 2, 100, 0, 2 * Math.PI);
+      ctx.lineWidth = 15;
+      ctx.strokeStyle = "#f5cf89";
+      ctx.stroke();
+      ctx.fillStyle = "#f5d69d";
+      ctx.fill();
+      break;
+    case "PIZZA SAUCE":
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, 100, 0, 2 * Math.PI);
+      ctx.fillStyle = "#ed4434";
+      ctx.fill();
+      break;
+    case "CHEESE":
+      ctx.beginPath();
+      ctx.arc(canvas.width / 2, canvas.height / 2, 95, 0, 2 * Math.PI);
+      ctx.fillStyle = "#f7bc4d";
+      ctx.fill();
+      break;
+    case "PEPPERONI":
+      const peperoniPositions = [
+        [78, 52],
+        [118, 74],
+        [147, 50],
+        [116, 134],
+        [125, 190],
+        [162, 165],
+        [192, 142],
+        [150, 115],
+        [76, 95],
+        [80, 190],
+        [61, 135],
+      ];
+      peperoniPositions.forEach(function (piece) {
+        ctx.beginPath();
+        ctx.fillStyle = "#db3611";
+        ctx.arc(piece[0], piece[1], 10, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      break;
+    case "HAM":
+      const hamPositions = [
+        [81, 62],
+        [108, 74],
+        [147, 47],
+        [130, 124],
+        [125, 160],
+        [159, 145],
+        [197, 82],
+        [202, 132],
+        [158, 90],
+        [86, 95],
+        [90, 140],
+        [105, 135],
+      ];
+      hamPositions.forEach(function (piece) {
+        ctx.fillStyle = "#f58c8c";
+        ctx.rotate((Math.random() * 2 * Math.PI) / 180);
+        ctx.fillRect(piece[0], piece[1], 8, 32);
+      });
+      break;
+    case "PINEAPPLE":
+      const pineapplePositions = [
+        [81, 62],
+        [108, 74],
+        [147, 47],
+        [130, 124],
+        [125, 160],
+        [159, 145],
+        [197, 82],
+        [202, 132],
+        [158, 90],
+        [86, 95],
+        [90, 140],
+        [105, 135],
+      ];
+      pineapplePositions.forEach(function (piece) {
+        ctx.fillStyle = "#ebe534";
+        ctx.rotate((Math.random() * 2 * Math.PI) / 180);
+        ctx.fillRect(piece[0], piece[1], 12, 18);
+      });
+      break;
+  }
+}
+
+function clearCanvas() {
+  const steps = document.getElementsByClassName("ingredient");
+  Array.from(steps).forEach(function (element) {
+    element.removeAttribute("disabled");
+  });
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function wastedPizza() {
+  wastedPizzas++;
+  completedSteps = [];
+  clearCanvas();
+}
+
+document.querySelector("#waste").addEventListener("click", wastedPizza);
